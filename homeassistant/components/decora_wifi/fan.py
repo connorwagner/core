@@ -4,11 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,37 +18,20 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
     """Encapsulates functionality specific to Decora WiFi fan controllers."""
 
     PERCENTAGE_ATTRIB_KEY = "brightness"
-    PRESET_OFF = "Off"
 
     @property
     def speed_count(self) -> int:
         """Return the number of supported non-zero speeds."""
 
-        return len(
-            list(filter(lambda preset: preset != self.PRESET_OFF, self.preset_modes))
-        )
+        return 4
 
     @property
     def supported_features(self) -> int:
         """Return supported features."""
 
         if self._switch.canSetLevel:
-            return SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            return SUPPORT_SET_SPEED
         return 0
-
-    @property
-    def preset_modes(self) -> list[str]:
-        """Return the supported preset modes."""
-
-        return [self.PRESET_OFF, "Low", "Medium", "High", "Max"]
-
-    @property
-    def preset_mode(self) -> str:
-        """Return the current preset name."""
-
-        percentage = self._switch.brightness
-        idx = round(percentage / self.percentage_step)
-        return self.preset_modes[idx]
 
     @property
     def percentage(self) -> int:
@@ -72,10 +51,6 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
 
         if percentage is not None:
             attribs[self.PERCENTAGE_ATTRIB_KEY] = self._get_valid_percentage(percentage)
-        elif preset_mode is not None:
-            attribs[self.PERCENTAGE_ATTRIB_KEY] = self._preset_mode_to_percentage(
-                preset_mode
-            )
 
         try:
             self._switch.update_attributes(attribs)
@@ -95,22 +70,6 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
         """Get the nearest valid fan speed."""
 
         return int(self.percentage_step * round(percentage / self.percentage_step))
-
-    def set_preset_mode(self, preset_mode: str) -> None:
-        """Update the fan's speed based on a preset."""
-
-        if preset_mode == self.preset_modes[0]:
-            self.turn_off()
-        else:
-            self.turn_on(preset_mode=preset_mode)
-
-    def _preset_mode_to_percentage(self, preset_mode: str) -> int:
-        """Convert a preset mode to a percentage."""
-
-        if preset_mode not in self.preset_modes:
-            return 0
-
-        return int(self.preset_modes.index(preset_mode) * self.percentage_step)
 
 
 async def async_setup_entry(
