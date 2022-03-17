@@ -94,7 +94,7 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
     def _get_valid_percentage(self, percentage: int) -> int:
         """Get the nearest valid fan speed."""
 
-        return percentage * round(percentage / self.percentage_step)
+        return int(self.percentage_step * round(percentage / self.percentage_step))
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Update the fan's speed based on a preset."""
