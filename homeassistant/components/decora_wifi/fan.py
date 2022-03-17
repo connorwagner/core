@@ -22,12 +22,15 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
     """Encapsulates functionality specific to Decora WiFi fan controllers."""
 
     PERCENTAGE_ATTRIB_KEY = "brightness"
+    PRESET_OFF = "Off"
 
     @property
     def speed_count(self) -> int:
         """Return the number of supported non-zero speeds."""
 
-        return len(self.preset_modes) - 1
+        return len(
+            list(filter(lambda preset: preset != self.PRESET_OFF, self.preset_modes))
+        )
 
     @property
     def supported_features(self) -> int:
@@ -41,14 +44,14 @@ class DecoraWifiFanController(BaseDecoraWifiEntity, FanEntity):
     def preset_modes(self) -> list[str]:
         """Return the supported preset modes."""
 
-        return ["Off", "Low", "Medium", "High", "Max"]
+        return [self.PRESET_OFF, "Low", "Medium", "High", "Max"]
 
     @property
     def preset_mode(self) -> str:
         """Return the current preset name."""
 
         percentage = self._switch.brightness
-        idx = int(percentage / self.percentage_step)
+        idx = round(percentage / self.percentage_step)
         return self.preset_modes[idx]
 
     @property
