@@ -622,7 +622,7 @@ async def _async_get_supported_devices(hass):
         device_id: dev_reg.async_get(device_id).name or device_id
         for device_id in results
     }
-    return dict(sorted(unsorted.items(), key=lambda item: item[1]))
+    return dict(sorted(unsorted.items(), key=lambda item: str(item[1])))
 
 
 def _async_get_matching_entities(
